@@ -91,12 +91,11 @@ app.get('/api/books', (req, res) => {
 
 // POST a new book (also fetches its cover and blurb)
 app.post('/api/books', async (req, res) => {
-  const { title, author, genre, tags, rating, date_finished, notes, status } = req.body;
+   const { title, author, genre, tags, rating, date_started, date_finished, notes, status } = req.body;
   const result = db.prepare(`
-    INSERT INTO books (title, author, genre, tags, rating, date_finished, notes, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(title, author, genre, tags, rating || null, date_finished, notes, status || 'read');
-
+    INSERT INTO books (title, author, genre, tags, rating, date_started, date_finished, notes, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(title, author, genre, tags, rating || null, date_started, date_finished, notes, status || 'read');
   const id = result.lastInsertRowid;
 
   try {
@@ -112,12 +111,12 @@ app.post('/api/books', async (req, res) => {
 
 // PUT (update) an existing book
 app.put('/api/books/:id', (req, res) => {
-  const { rating, date_finished, notes, status } = req.body;
+   const { rating, date_started, date_finished, notes, status } = req.body;
   db.prepare(`
     UPDATE books
-    SET rating = ?, date_finished = ?, notes = ?, status = ?
+    SET rating = ?, date_started = ?, date_finished = ?, notes = ?, status = ?
     WHERE id = ?
-  `).run(rating || null, date_finished, notes, status, req.params.id);
+  `).run(rating || null, date_started, date_finished, notes, status, req.params.id);
   res.json({ success: true });
 });
 
@@ -222,7 +221,19 @@ app.get('/api/stats', (req, res) => {
     ORDER BY avg_rating DESC
   `).all();
 
-  res.json({ perMonth, perGenre });
+    // Days taken to finish each book (start date to end date, counting both days)
+  const pace = db.prepare(`
+    SELECT title,
+           CAST(julianday(date_finished) - julianday(date_started) AS INTEGER) + 1 AS days
+    FROM books
+    WHERE status = 'read'
+      AND date_started IS NOT NULL AND date_started != ''
+      AND date_finished IS NOT NULL AND date_finished != ''
+      AND julianday(date_finished) >= julianday(date_started)
+    ORDER BY date_finished ASC
+  `).all();
+
+  res.json({ perMonth, perGenre, pace });
 });
 
 const PORT = process.env.PORT || 3000;

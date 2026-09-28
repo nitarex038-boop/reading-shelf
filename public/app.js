@@ -5,10 +5,11 @@ const searchInput = document.getElementById('search');
 const statusFilter = document.getElementById('status-filter');
 
 let allBooks = [];
-let currentPicks = [];  // the recommended books currently on screen
+let currentPicks = [];
 let editingId = null;
 let monthsChart = null;
 let genreChart = null;
+let paceChart = null;
 
 const STATUS_LABELS = {
   read: 'Read',
@@ -33,7 +34,22 @@ function starsFor(rating) {
   return out;
 }
 
-// A cover image, or a plain placeholder with the title's first letter
+// '2026-03-20' -> '20 Mar 2026'
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function datesLine(book) {
+  if (book.date_started && book.date_finished) {
+    return `Started ${formatDate(book.date_started)}, finished ${formatDate(book.date_finished)}`;
+  }
+  if (book.date_finished) return `Finished ${formatDate(book.date_finished)}`;
+  if (book.date_started) return `Started ${formatDate(book.date_started)}`;
+  return '';
+}
+
 function coverHtml(coverUrl, title) {
   if (coverUrl) {
     return `<img class="cover" src="${escapeHtml(coverUrl)}" alt="Cover of ${escapeHtml(title)}" loading="lazy">`;
@@ -43,6 +59,7 @@ function coverHtml(coverUrl, title) {
 }
 
 function rowHtml(book) {
+  const dates = datesLine(book);
   return `
     <div class="book-row book-grid">
       <h3 class="g-title">${escapeHtml(book.title)}</h3>
@@ -58,13 +75,14 @@ function rowHtml(book) {
       </div>
       <div class="g-cover">${coverHtml(book.cover_url, book.title)}</div>
       <div class="g-blurb">
+        ${dates ? `<p class="dates">${dates}</p>` : ''}
         ${book.description ? `<p class="blurb">${escapeHtml(book.description)}</p>` : ''}
         ${book.notes ? `<p class="notes">${escapeHtml(book.notes)}</p>` : ''}
       </div>
     </div>
   `;
 }
-      
+
 function editRowHtml(book) {
   const options = Object.keys(STATUS_LABELS).map(key =>
     `<option value="${key}" ${book.status === key ? 'selected' : ''}>${STATUS_LABELS[key]}</option>`
@@ -77,6 +95,7 @@ function editRowHtml(book) {
       <div class="edit-grid">
         <label>Status <select id="edit-status">${options}</select></label>
         <label>Rating (1-5) <input type="number" id="edit-rating" min="1" max="5" value="${book.rating ?? ''}"></label>
+        <label>Date started <input type="date" id="edit-start" value="${escapeHtml(book.date_started)}"></label>
         <label>Date finished <input type="date" id="edit-date" value="${escapeHtml(book.date_finished)}"></label>
         <label>Notes <textarea id="edit-notes">${escapeHtml(book.notes)}</textarea></label>
       </div>
@@ -137,7 +156,7 @@ async function loadRecommendations() {
       return;
     }
 
-         recsDiv.innerHTML = currentPicks.map((pick, i) => `
+    recsDiv.innerHTML = currentPicks.map((pick, i) => `
       <div class="pick">
         <h3 class="g-title">${escapeHtml(pick.title)}</h3>
         <p class="g-author">${pick.author ? `by ${escapeHtml(pick.author)}` : ''}${pick.year ? `, first published ${pick.year}` : ''}</p>
@@ -154,10 +173,13 @@ async function loadRecommendations() {
         </div>
       </div>
     `).join('');
-    
   } catch (err) {
     recsDiv.innerHTML = '<p class="empty-state">Couldn\'t load recommendations right now.</p>';
   }
+}
+
+function shorten(text, max = 18) {
+  return text.length > max ? text.slice(0, max - 1) + '…' : text;
 }
 
 async function loadStats() {
@@ -166,6 +188,7 @@ async function loadStats() {
 
   if (monthsChart) monthsChart.destroy();
   if (genreChart) genreChart.destroy();
+  if (paceChart) paceChart.destroy();
 
   monthsChart = new Chart(document.getElementById('months-chart'), {
     type: 'bar',
@@ -196,6 +219,38 @@ async function loadStats() {
       scales: { y: { beginAtZero: true, max: 5 } },
     },
   });
+
+  // Reading pace: days taken to finish each book
+  const paceCanvas = document.getElementById('pace-chart');
+  const paceSummary = document.getElementById('pace-summary');
+
+  if (data.pace.length === 0) {
+    paceCanvas.style.display = 'none';
+    paceSummary.textContent = 'Add a start and finish date to a book (use Edit) to see your pace.';
+    return;
+  }
+
+  paceCanvas.style.display = 'block';
+  const average = data.pace.reduce((sum, p) => sum + p.days, 0) / data.pace.length;
+  paceSummary.textContent = `On average you finish a book in ${average.toFixed(1)} days (across ${data.pace.length} book${data.pace.length === 1 ? '' : 's'}).`;
+
+  paceChart = new Chart(paceCanvas, {
+    type: 'bar',
+    data: {
+      labels: data.pace.map(p => shorten(p.title)),
+      datasets: [{
+        label: 'Days to finish',
+        data: data.pace.map(p => p.days),
+        backgroundColor: '#1B1F3B',
+      }],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Days' } },
+      },
+    },
+  });
 }
 
 async function refreshAll() {
@@ -219,9 +274,15 @@ async function saveEdit(id) {
   const updated = {
     status: document.getElementById('edit-status').value,
     rating: document.getElementById('edit-rating').value,
+    date_started: document.getElementById('edit-start').value,
     date_finished: document.getElementById('edit-date').value,
     notes: document.getElementById('edit-notes').value,
   };
+
+  if (updated.date_started && updated.date_finished && updated.date_finished < updated.date_started) {
+    alert('The finish date is before the start date. Please check them.');
+    return;
+  }
 
   await fetch(`/api/books/${id}`, {
     method: 'PUT',
@@ -237,6 +298,13 @@ async function saveEdit(id) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
+  const started = document.getElementById('date_started').value;
+  const finished = document.getElementById('date_finished').value;
+  if (started && finished && finished < started) {
+    alert('The finish date is before the start date. Please check them.');
+    return;
+  }
+
   const button = form.querySelector('button[type="submit"]');
   button.disabled = true;
   button.textContent = 'Adding…';
@@ -248,7 +316,8 @@ form.addEventListener('submit', async (e) => {
     tags: document.getElementById('tags').value,
     status: document.getElementById('status').value,
     rating: document.getElementById('rating').value,
-    date_finished: document.getElementById('date_finished').value,
+    date_started: started,
+    date_finished: finished,
     notes: document.getElementById('notes').value,
   };
 
@@ -284,6 +353,7 @@ async function addPick(index, button) {
       tags: '',
       status: 'want',
       rating: '',
+      date_started: '',
       date_finished: '',
       notes: '',
     }),

@@ -27,7 +27,8 @@
         <option value="want">Want to read</option>
       </select>
       <input type="number" id="rating" placeholder="Rating (1-5)" min="1" max="5">
-      <input type="date" id="date_finished">
+      <      <label class="field">Date started <input type="date" id="date_started"></label>
+      <label class="field">Date finished <input type="date" id="date_finished"></label>
       <textarea id="notes" placeholder="Notes"></textarea>
       <button type="submit">Add to shelf</button>
     </form>
@@ -61,7 +62,11 @@
     <h2>Average rating by genre</h2>
     <canvas id="genre-chart"></canvas>
   </section>
-
+  <section class="panel">
+    <h2>Reading pace</h2>
+    <p id="pace-summary" class="pace-summary"></p>
+    <canvas id="pace-chart"></canvas>
+  </section>
   <script src="app.js"></script>
 </body>
 </html>

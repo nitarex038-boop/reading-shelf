@@ -326,3 +326,23 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #5B563F;
+}
+
+.dates {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: #5B563F;
+}
+
+.panel--accent .dates { color: var(--text-muted); }
+
+.pace-summary {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+}
