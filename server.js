@@ -216,7 +216,7 @@ app.get('/api/stats', (req, res) => {
   const perGenre = db.prepare(`
     SELECT genre, AVG(rating) as avg_rating, COUNT(*) as count
     FROM books
-    WHERE status = 'read' AND genre IS NOT NULL AND genre != '' AND rating IS NOT NULL
+    WHERE status = 'read' AND genre IS NOT NULL AND genre != ''
     GROUP BY genre
     ORDER BY avg_rating DESC
   `).all();

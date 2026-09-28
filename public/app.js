@@ -190,33 +190,71 @@ async function loadStats() {
   if (genreChart) genreChart.destroy();
   if (paceChart) paceChart.destroy();
 
+  // Fill in months with no books so the line shows the real gaps
+  const monthCounts = {};
+  data.perMonth.forEach(m => { monthCounts[m.month] = m.count; });
+
+  const monthLabels = [];
+  const monthValues = [];
+  if (data.perMonth.length > 0) {
+    let [year, month] = data.perMonth[0].month.split('-').map(Number);
+    const [lastYear, lastMonth] = data.perMonth[data.perMonth.length - 1].month.split('-').map(Number);
+
+    while (year < lastYear || (year === lastYear && month <= lastMonth)) {
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      monthLabels.push(key);
+      monthValues.push(monthCounts[key] || 0);
+      month++;
+      if (month > 12) { month = 1; year++; }
+    }
+  }
+
   monthsChart = new Chart(document.getElementById('months-chart'), {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: data.perMonth.map(m => m.month),
+      labels: monthLabels,
       datasets: [{
         label: 'Books finished',
-        data: data.perMonth.map(m => m.count),
-        backgroundColor: '#C99A44',
+        data: monthValues,
+        borderColor: '#C99A44',
+        backgroundColor: 'rgba(201, 154, 68, 0.2)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#C99A44',
       }],
     },
     options: {
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
     },
   });
+    const palette = ['#C99A44', '#4F6B54', '#1B1F3B', '#A8553F', '#7A6FA8', '#3F8FA8', '#C27C8C', '#8A8F4E'];
 
   genreChart = new Chart(document.getElementById('genre-chart'), {
-    type: 'bar',
+    type: 'pie',
     data: {
       labels: data.perGenre.map(g => g.genre),
       datasets: [{
-        label: 'Average rating',
-        data: data.perGenre.map(g => g.avg_rating),
-        backgroundColor: '#4F6B54',
+        data: data.perGenre.map(g => g.count),
+        backgroundColor: data.perGenre.map((g, i) => palette[i % palette.length]),
+        borderColor: '#EDE3CE',
+        borderWidth: 2,
       }],
     },
     options: {
-      scales: { y: { beginAtZero: true, max: 5 } },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const g = data.perGenre[ctx.dataIndex];
+              const books = `${g.count} book${g.count === 1 ? '' : 's'}`;
+              const rating = g.avg_rating != null ? `, average rating ${g.avg_rating.toFixed(1)}` : '';
+              return ` ${g.genre}: ${books}${rating}`;
+            },
+          },
+        },
+      },
     },
   });
 
