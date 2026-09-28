@@ -64,6 +64,8 @@ body {
 
 .panel--accent h2 { color: var(--gold-bright); }
 
+/* ---------- Forms and buttons ---------- */
+
 form {
   display: flex;
   flex-direction: column;
@@ -92,20 +94,155 @@ button {
   font-weight: 600;
   background: var(--gold);
   color: var(--ink-deep);
-  .book-row--with-cover {
-  display: flex;
-  gap: 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
 }
 
-.book-row__body {
+button:hover { background: var(--gold-bright); }
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.toolbar input {
   flex: 1;
   min-width: 0;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  color: var(--moss);
+  padding: 2px 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.link-button:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+.panel--accent .link-button { color: var(--gold-bright); }
+
+.book-row__delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 6px;
+}
+
+.book-row__delete:hover {
+  background: none;
+  color: #A33;
+}
+
+/* ---------- Tags ---------- */
+
+.badge {
+  background: var(--moss);
+  color: var(--text-light);
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.badge--status {
+  background: var(--gold);
+  color: var(--ink-deep);
+}
+
+.stars {
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* ---------- Book card layout (shelf rows and recommendations) ----------
+   Row 1:  title  | author
+   Row 2:  genre  | edit / delete
+   Row 3:  cover  | blurb
+*/
+
+.book-row {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--parchment-dim);
+}
+
+.book-row:last-child { border-bottom: none; }
+
+.pick {
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(237, 231, 216, 0.15);
+}
+
+.pick:last-child { border-bottom: none; }
+
+.book-grid, .pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "title author"
+    "genre actions"
+    "cover blurb";
+  column-gap: 20px;
+  row-gap: 10px;
+  align-items: start;
+}
+
+.g-title {
+  grid-area: title;
+  font-family: 'Fraunces', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.g-author {
+  grid-area: author;
+  margin: 0;
+  color: #5B563F;
+  font-size: 0.9rem;
+  align-self: center;
+}
+
+.panel--accent .g-author { color: var(--text-muted); }
+
+.g-genre {
+  grid-area: genre;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.g-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.g-actions .link-button { padding-left: 0; }
+
+.g-cover { grid-area: cover; }
+
+.g-blurb { grid-area: blurb; }
+
 .cover {
-  width: 64px;
-  height: 96px;
-  flex-shrink: 0;
+  display: block;
+  width: 100%;
+  max-width: 170px;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: 2px;
   background: var(--ink);
@@ -116,107 +253,76 @@ button {
   align-items: center;
   justify-content: center;
   font-family: 'Fraunces', serif;
-  font-size: 1.8rem;
+  font-size: 2.4rem;
   color: var(--gold-bright);
 }
 
-.book-row__blurb {
-  margin: 10px 0 0;
-  font-size: 0.85rem;
+.blurb {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
   color: #4a4634;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.pick {
-  display: flex;
-  gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(237, 231, 216, 0.15);
-}
+.panel--accent .blurb { color: var(--text-light); }
 
-.pick:last-child { border-bottom: none; }
-
-.pick__body { flex: 1; min-width: 0; }
-
-.pick__body h3 {
-  font-family: 'Fraunces', serif;
-  font-size: 1.05rem;
-  margin: 0 0 2px;
-  font-weight: 600;
-}
-
-.pick__meta {
-  margin: 0 0 6px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.notes {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #5B563F;
+  font-style: italic;
 }
 
 .pick__reason {
-  margin: 0 0 6px;
+  flex-basis: 100%;
+  margin: 0;
   font-size: 0.85rem;
   color: var(--gold-bright);
 }
 
-.panel--accent .link-button {
-  color: var(--gold-bright);
-  padding-left: 0;
-}
+/* ---------- Edit form ---------- */
 
-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-.book-row__detail {
+.edit-grid {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-top: 12px;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
 }
 
-.book-row__detail .cover {
-  width: 80px;
-  height: 120px;
-}
-
-.book-row__text {
-  flex: 1;
-  min-width: 0;
-}
-
-.book-row__text .book-row__blurb {
-  margin-top: 0;
-  -webkit-line-clamp: 6;
-}
-.pick {
-  display: block;
-}
-
-.pick__detail {
+.edit-grid label {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-top: 12px;
-}
-
-.pick__detail .cover {
-  width: 80px;
-  height: 120px;
-}
-
-.pick__text {
-  flex: 1;
-  min-width: 0;
-}
-
-.pick__blurb {
-  margin: 0 0 8px;
+  flex-direction: column;
+  gap: 4px;
   font-size: 0.85rem;
-  color: var(--text-light);
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: #5B563F;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-buttons .secondary {
+  background: transparent;
+  color: var(--text-dark);
+  border: 1px solid var(--text-muted);
+}
+
+.empty-state {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 600px) {
+  .panel { margin: 0 16px 24px; padding: 22px 20px; }
+  .hero { padding: 48px 20px 28px; }
+  .hero h1 { font-size: 2.1rem; }
+  .book-grid, .pick { column-gap: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
 }

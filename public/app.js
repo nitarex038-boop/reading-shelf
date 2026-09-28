@@ -44,26 +44,22 @@ function coverHtml(coverUrl, title) {
 
 function rowHtml(book) {
   return `
-    <div class="book-row">
-      <div class="book-row__top">
-        <h3>${escapeHtml(book.title)}</h3>
-        <div class="book-row__actions">
-          <button class="link-button" onclick="startEdit(${book.id})">Edit</button>
-          <button class="book-row__delete" onclick="deleteBook(${book.id})" aria-label="Remove ${escapeHtml(book.title)}">✕</button>
-        </div>
-      </div>
-      <p class="book-row__author">by ${escapeHtml(book.author) || 'Unknown'}</p>
-      <div class="book-row__badges">
+    <div class="book-row book-grid">
+      <h3 class="g-title">${escapeHtml(book.title)}</h3>
+      <p class="g-author">by ${escapeHtml(book.author) || 'Unknown'}</p>
+      <div class="g-genre">
         ${book.genre ? `<span class="badge">${escapeHtml(book.genre)}</span>` : ''}
         ${book.status && book.status !== 'read' ? `<span class="badge badge--status">${STATUS_LABELS[book.status]}</span>` : ''}
         ${book.rating ? `<span class="stars">${starsFor(book.rating)}</span>` : ''}
       </div>
-      <div class="book-row__detail">
-        ${coverHtml(book.cover_url, book.title)}
-        <div class="book-row__text">
-          ${book.description ? `<p class="book-row__blurb">${escapeHtml(book.description)}</p>` : ''}
-          ${book.notes ? `<p class="book-row__notes">${escapeHtml(book.notes)}</p>` : ''}
-        </div>
+      <div class="g-actions">
+        <button class="link-button" onclick="startEdit(${book.id})">Edit</button>
+        <button class="book-row__delete" onclick="deleteBook(${book.id})" aria-label="Remove ${escapeHtml(book.title)}">✕</button>
+      </div>
+      <div class="g-cover">${coverHtml(book.cover_url, book.title)}</div>
+      <div class="g-blurb">
+        ${book.description ? `<p class="blurb">${escapeHtml(book.description)}</p>` : ''}
+        ${book.notes ? `<p class="notes">${escapeHtml(book.notes)}</p>` : ''}
       </div>
     </div>
   `;
@@ -141,21 +137,24 @@ async function loadRecommendations() {
       return;
     }
 
-       recsDiv.innerHTML = currentPicks.map((pick, i) => `
+         recsDiv.innerHTML = currentPicks.map((pick, i) => `
       <div class="pick">
-        <h3>${escapeHtml(pick.title)}</h3>
-        <p class="pick__meta">${pick.author ? `by ${escapeHtml(pick.author)}` : ''}${pick.year ? `, first published ${pick.year}` : ''}</p>
-        ${pick.genre ? `<span class="badge">${escapeHtml(pick.genre)}</span>` : ''}
-        <p class="pick__reason">${escapeHtml(pick.reason)}</p>
-        <div class="pick__detail">
-          ${coverHtml(pick.cover_url, pick.title)}
-          <div class="pick__text">
-            ${pick.description ? `<p class="pick__blurb">${escapeHtml(pick.description)}</p>` : ''}
-            <button class="link-button" onclick="addPick(${i}, this)">Add to want to read</button>
-          </div>
+        <h3 class="g-title">${escapeHtml(pick.title)}</h3>
+        <p class="g-author">${pick.author ? `by ${escapeHtml(pick.author)}` : ''}${pick.year ? `, first published ${pick.year}` : ''}</p>
+        <div class="g-genre">
+          ${pick.genre ? `<span class="badge">${escapeHtml(pick.genre)}</span>` : ''}
+          <p class="pick__reason">${escapeHtml(pick.reason)}</p>
+        </div>
+        <div class="g-actions">
+          <button class="link-button" onclick="addPick(${i}, this)">Add to want to read</button>
+        </div>
+        <div class="g-cover">${coverHtml(pick.cover_url, pick.title)}</div>
+        <div class="g-blurb">
+          ${pick.description ? `<p class="blurb">${escapeHtml(pick.description)}</p>` : ''}
         </div>
       </div>
     `).join('');
+    
   } catch (err) {
     recsDiv.innerHTML = '<p class="empty-state">Couldn\'t load recommendations right now.</p>';
   }
