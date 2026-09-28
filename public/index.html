@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>My Reading Shelf</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>My Reading Shelf</h1>
+    <p class="hero-sub">Every book you've finished, and what to read next.</p>
+  </header>
+
+  <section class="panel">
+    <h2>Add a book</h2>
+    <form id="book-form">
+      <input type="text" id="title" placeholder="Title" required>
+      <input type="text" id="author" placeholder="Author">
+      <input type="text" id="genre" placeholder="Genre (e.g. Sci-Fi)">
+      <input type="text" id="tags" placeholder="Tags (comma separated)">
+      <select id="status">
+        <option value="read">Read</option>
+        <option value="reading">Currently reading</option>
+        <option value="want">Want to read</option>
+      </select>
+      <input type="number" id="rating" placeholder="Rating (1-5)" min="1" max="5">
+      <input type="date" id="date_finished">
+      <textarea id="notes" placeholder="Notes"></textarea>
+      <button type="submit">Add to shelf</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Your shelf</h2>
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Search title, author, genre or tags">
+      <select id="status-filter">
+        <option value="all">All books</option>
+        <option value="read">Read</option>
+        <option value="reading">Currently reading</option>
+        <option value="want">Want to read</option>
+      </select>
+    </div>
+    <div id="book-list"></div>
+  </section>
+
+  <section class="panel panel--accent">
+    <h2>Recommended for you</h2>
+    <div id="recommendations"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Your reading over time</h2>
+    <canvas id="months-chart"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>Average rating by genre</h2>
+    <canvas id="genre-chart"></canvas>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

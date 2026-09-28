@@ -1,0 +1,4 @@
+node_modules/
+books.db
+.env
+book script.json
